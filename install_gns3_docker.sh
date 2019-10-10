@@ -3,6 +3,12 @@
 #             UNAN-LEÓN
 #  Script creado por Salvador Real
 #   Redes de Computadores 2019
+# Probado en:
+# Debian 9,10
+# Kali linux 2019.3
+# Ubuntu 18
+# Linux Mint
+# Solo funciona en distribuciones basadas en Ubuntu o Debian y que utilcen apt como gestor de paquetes
 ####################################
 
 Green=$(tput setaf 10)
