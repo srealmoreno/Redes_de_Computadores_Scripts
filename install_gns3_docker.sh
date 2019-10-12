@@ -5,7 +5,7 @@
 #   Redes de Computadores 2019
 # Probado en:
 # Debian 9,10
-# Kali linux 2019.3
+# Kali linux 2019.3, 2019.1
 # Ubuntu 18
 # Linux Mint
 # Solo funciona en distribuciones basadas en Ubuntu o Debian y que utilicen apt como gestor de paquetes
@@ -30,12 +30,29 @@ advertencia() {
 exito() {
     echo -e "${Green}Exíto: ${Normal}$1"
 }
-
+presiona_una_tecla() {
+    read -n 1 -s -r -p "Presiona cualquier tecla para continuar"
+    echo ""
+}
 install_dependencias_gns3() {
     advertencia "Instalando dependencias de GNS3..."
     apt-get install -y make || advertencia "error en instalar make"
     apt-get install -y git || advertencia "error en instalar git"
     apt-get install -y libpcap0.8-dev || advertencia "error en instalar libpcap0.8-dev"
+
+    if [ -d /usr/bin/python3.7 ]; then
+
+        if [ ! -e /usr/bin/python3.5 ]; then
+            ln -s /usr/bin/python3.7 /usr/bin/python3.5
+        fi
+
+        if [ ! -e /usr/bin/python3.6 ]; then
+            ln -s /usr/bin/python3.7 /usr/bin/python3.6
+        fi
+
+        export PYTHONPATH=$PYTHONPATH:/usr/lib/python3.7
+    fi
+
 }
 
 install_dependencias_docker() {
@@ -71,8 +88,7 @@ get_os() {
 
     if [[ "$VERSION_CODENAME" == *sid* ]] || [[ "$VERSION_CODENAME" == *n/a* ]]; then
         advertencia "Se ha detectado una versión inestable de $PRETTY_NAME $VERSION_ID, posiblemente no funcione este script..."
-        read -n 1 -s -r -p "Presiona cualquier tecla para continuar"
-        echo ""
+        presiona_una_tecla
     fi
 }
 
@@ -182,16 +198,68 @@ update_vpcs() {
 check_group() {
     if [ "$(grep "$1" /etc/group)" == "" ]; then
         advertencia "No existe el grupo $1\nPor favor elige 'Sí' en el siguiente dialogo"
-        read -n 1 -s -r -p "Presiona cualquier tecla para continuar"
-        echo
+        presiona_una_tecla
         dpkg-reconfigure $2 || advertencia "No se pudo crear el grupo"
     fi
 }
 
+update_gns3() {
+
+    mkdir .gns3_tmp
+    cd .gns3_tmp
+    update_vpcs
+    update_ubridge
+    cd ..
+    rm -rf .gns3_tmp
+
+    advertencia "Añadiendo $SUDO_USER a los grupos necesarios"
+    check_group "wireshark" "wireshark-common"
+    check_group "ubridge" "ubridge"
+
+    for i in wireshark docker ubridge; do
+        usermod -aG $i $SUDO_USER && exito "Se ha añadido a $SUDO_USER en el grupo $i con exíto" || advertencia "No se pudo agregar $SUDO_USER al grupo $i, tendrá que hacerlo manualmente"
+    done
+
+}
+
+crear_acceso_directo() {
+
+    echo -e "${Blue}\tCreando acceso directo... ${Normal}"
+    git clone https://github.com/srealmoreno/Redes_de_Computadores_Scripts.git
+
+    cp -r Redes_de_Computadores_Scripts/files_gns3/* /usr/ || advertencia "No se pudo crear el acceso directo" && exito "Acceso directo creado exitosamente"
+
+    rm -rf Redes_de_Computadores_Scripts
+
+    update-icon-caches /usr/share/icons/hicolor/
+    gtk-update-icon-cache
+
+}
+
+install_gns3_pip() {
+    echo -e "${Blue}\tInstalando Gns3 desde Pip${Normal}"
+
+    apt-get remove -y gns3-gui gns3-server 2>/dev/null
+    rm /etc/apt/sources.list.d/gns3.list 2>/dev/null
+
+    dpkg --add-architecture i386
+    apt-get update
+
+    apt install -y python3-pyqt5 python3-pyqt5.qtsvg python3-pyqt5.qtwebsockets \
+        python3-jsonschema python3-pip wireshark vinagre libc6 libpcap0.8-dev \
+        libexpat1 zlib1g vpcs ubridge qemu-system-x86 qemu-kvm qemu-utils git make \
+        cpulimit libvirt-daemon-system dynamips:i386 x11vnc xvfb git || error_fatal "error al instalar dependencias" && exito "Dependencias instaladas exitosamente"
+
+    pip3 install -U pyqt5-sip || error_fatal "error al instalar gpyqt5-sip"
+    pip3 install -U gns3-server || error_fatal "error al instalar gns3-server" && exito "Gns3 server instalado"
+    pip3 install -U gns3-gui || error_fatal "error al instalar gns3-gui" && exito "Gns3 Gui instalado"
+    update_gns3
+    crear_acceso_directo
+
+}
+
 install_gns3() {
     echo -e "${Blue}\tInstalando Gns3"
-
-    advertencia "Agregando repositorio"
 
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F88F6D313016330404F710FC9A2FD067A2E3EF7B || error_fatal "Error al añadir clave GPG oficial de Gns3"
 
@@ -226,20 +294,7 @@ install_gns3() {
     apt-get install -y gns3-gui || error_fatal "error al instalar gns3-gui" && exito "Gns3 Gui instalado"
     apt-get install -y dynamips:i386
 
-    mkdir .gns3_tmp
-    cd .gns3_tmp
-    update_vpcs
-    update_ubridge
-    cd ..
-    rm -rf .gns3_tmp
-
-    advertencia "Añadiendo $SUDO_USER a los grupos necesarios"
-    check_group "wireshark" "wireshark-common"
-    check_group "ubridge" "ubridge"
-    for i in wireshark docker ubridge; do
-        usermod -aG $i $SUDO_USER && exito "Se ha añadido a $SUDO_USER en el grupo $i con exíto" || advertencia "No se pudo agregar $SUDO_USER al grupo $i, tendrá que hacerlo manualmente"
-    done
-
+    update_gns3
 }
 
 clean_cache() {
@@ -254,12 +309,16 @@ if [ "$EUID" != "0" ]; then #Si no es el usuario root, se sale
     error_fatal "Debe de ejecutar el script con permisos root\nsudo $0"
 fi
 
+if [ ! -n "$SUDO_USER" ]; then
+    error_fatal "Por favor inicia sesión desde un usuario diferente a root"
+fi
+
 if [ "$#" == "0" ]; then #Si no se pasa ningún argumento, instala todo
     gns3="true"
     docker="true"
     images="true"
 else
-    while getopts ":h :a :d :g :i" arg; do #a instala todo, d instala docker, g instala gns3, i instala images de salvador
+    while getopts ":h :a :d :g :p :i" arg; do #a instala todo, d instala docker, g instala gns3, i instala images de salvador
         case "$arg" in
         a)
             gns3="true"
@@ -267,23 +326,41 @@ else
             images="true"
             ;;
         g)
+            if [[ -n "$pip" ]]; then
+                error_fatal "Error de sintaxis, -g -p\n¿Instalar gns3 desde el repositorio y desde Python-pip?\nUso $0 [-a Instalar todo] [-d instalar docker] [-g instalar gns3] [-p instalar gns3 desde python-pip] [-i importar images de Salvador]"
+            fi
             gns3="true"
             ;;
         d)
             docker="true"
             ;;
+        p)
+            if [[ -n "$gns3" ]]; then
+                error_fatal "Error de sintaxis, -g -p\n¿Instalar gns3 desde el repositorio y desde Python-pip?\nUso $0 [-a Instalar todo] [-d instalar docker] [-g instalar gns3] [-p instalar gns3 desde python-pip] [-i importar images de Salvador]"
+            fi
+            pip="true"
+            ;;
         i)
             images="true"
             ;;
+        h)
+            echo "${Yellow}Uso${Normal} $0 ${Green}[opciones] [-g -d -i]${Normal}"
+            echo -e "\t${Blue} -a ${Normal}Instala todos los paquetes"
+            echo -e "\t${Blue} -g ${Normal}Instala gns3 desde el repositorio oficial"
+            echo -e "\t${Blue} -p ${Normal}Instala gns3 desde Python-pip (Por si -g te da problemas)(Recomendado para Kali Linux)"
+            echo -e "\t${Blue} -d ${Normal}Instala docker"
+            echo -e "\t${Blue} -i ${Normal}Importa imagenes ubuntu de Salvador"
+            exit 1
+            ;;
         *)
-            error_fatal "Uso $0 [-a Instalar todo] [-d instalar docker] [-g instalar gns3] [-i importar images de Salvador]"
+            error_fatal "Uso $0 [-a Instalar todo] [-d instalar docker] [-g instalar gns3] [-p instalar gns3 desde python-pip] [-i importar images de Salvador]"
             exit 1
             ;;
         esac
     done
 fi
 
-if [ -n "$docker" ] || [ -n "$gns3" ] || [ -n "$images" ]; then
+if [ -n "$docker" ] || [ -n "$gns3" ] || [ -n "$images" ] || [ -n "$pip" ]; then
 
     exito "Iniciando Script de instalación"
 
@@ -299,6 +376,10 @@ if [ -n "$docker" ] || [ -n "$gns3" ] || [ -n "$images" ]; then
     if [ -n "$gns3" ]; then
         install_dependencias_gns3
         install_gns3
+    fi
+
+    if [ -n "$pip" ]; then
+        install_gns3_pip
     fi
 
     if [ -n "$images" ]; then
