@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mime-type xmlns="http://www.freedesktop.org/standards/shared-mime-info" type="application/x-gns3">
+  <!--Created automatically by update-mime-database. DO NOT EDIT!-->
+  <glob pattern="*.gns3"/>
+  <comment xml:lang="en">GNS3 Topology File</comment>
+  <glob pattern="*.net"/>
+  <comment>gns3</comment>
+  <glob pattern="*.gns3"/>
+  <icon name="gns3"/>
+</mime-type>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mime-type xmlns="http://www.freedesktop.org/standards/shared-mime-info" type="application/x-gns3a">
+  <!--Created automatically by update-mime-database. DO NOT EDIT!-->
+  <glob pattern="*.gns3appliance"/>
+  <comment>GNS3 Appliance File</comment>
+  <comment xml:lang="en">GNS3 Appliance File</comment>
+  <glob pattern="*.gns3a"/>
+</mime-type>

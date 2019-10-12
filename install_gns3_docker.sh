@@ -231,13 +231,17 @@ crear_acceso_directo() {
 
     rm -rf Redes_de_Computadores_Scripts
 
-    update-icon-caches /usr/share/icons/hicolor/
-    gtk-update-icon-cache
+    #update-icon-caches /usr/share/icons/hicolor/
+    #gtk-update-icon-cache
+
+    #update-mime-database /usr/share/mime
+   
+    update-desktop-database
 
 }
 
 install_gns3_pip() {
-    echo -e "${Blue}\tInstalando Gns3 desde Pip${Normal}"
+    echo -e "${Blue}\tInstalando Gns3 desde Python pip${Normal}"
 
     apt-get remove -y gns3-gui gns3-server 2>/dev/null
     rm /etc/apt/sources.list.d/gns3.list 2>/dev/null
@@ -388,7 +392,7 @@ if [ -n "$docker" ] || [ -n "$gns3" ] || [ -n "$images" ] || [ -n "$pip" ]; then
         #importar_a_docker "ubuntu_graphic" "ubuntu_rdc_graphic.tar" "srealmoreno/rdc:ubuntu_graphic"
     fi
 
-    if [ -n "$docker" ] || [ -n "$gns3" ]; then
+    if [ -n "$docker" ] || [ -n "$gns3" ] || [ -n "$pip" ]; then
         clean_cache
     fi
 
