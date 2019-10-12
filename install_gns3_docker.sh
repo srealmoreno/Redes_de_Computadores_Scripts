@@ -231,13 +231,9 @@ crear_acceso_directo() {
 
     rm -rf Redes_de_Computadores_Scripts
 
-    #update-icon-caches /usr/share/icons/hicolor/
-    #gtk-update-icon-cache
-
-    #update-mime-database /usr/share/mime
+    update-icon-caches /usr/share/icons/hicolor/
+    update-mime-database /usr/share/mime
    
-    update-desktop-database
-
 }
 
 install_gns3_pip() {
