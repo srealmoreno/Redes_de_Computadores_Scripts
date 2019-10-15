@@ -105,7 +105,7 @@ importar_a_docker() {
 
 install_docker() {
 
-    echo -e "${Blue}\tInstalando Docker"
+    echo -e "${Blue}\tInstalando Docker${Normal}"
 
     advertencia "Agregando repositorio"
 
@@ -247,7 +247,7 @@ install_gns3_pip() {
 
     apt install -y python3-pyqt5 python3-pyqt5.qtsvg python3-pyqt5.qtwebsockets \
         python3-jsonschema python3-pip wireshark vinagre libc6 libpcap0.8-dev \
-        libexpat1 zlib1g vpcs ubridge qemu-system-x86 qemu-kvm qemu-utils git make \
+        libexpat1 zlib1g vpcs qemu-system-x86 qemu-kvm qemu-utils git make \
         cpulimit libvirt-daemon-system dynamips:i386 x11vnc xvfb git || error_fatal "error al instalar dependencias" && exito "Dependencias instaladas exitosamente"
 
     pip3 install -U pyqt5-sip || error_fatal "error al instalar gpyqt5-sip"
@@ -259,7 +259,7 @@ install_gns3_pip() {
 }
 
 install_gns3() {
-    echo -e "${Blue}\tInstalando Gns3"
+    echo -e "${Blue}\tInstalando Gns3${Normal}"
 
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F88F6D313016330404F710FC9A2FD067A2E3EF7B || error_fatal "Error al añadir clave GPG oficial de Gns3"
 
@@ -344,7 +344,7 @@ else
             images="true"
             ;;
         h)
-            echo "${Yellow}Uso${Normal} $0 ${Green}[opciones] [-g -d -i]${Normal}"
+            echo "${Yellow}Uso${Normal} $0 ${Green}[opciones] [-g -d -p -i]${Normal}"
             echo -e "\t${Blue} -a ${Normal}Instala todos los paquetes"
             echo -e "\t${Blue} -g ${Normal}Instala gns3 desde el repositorio oficial"
             echo -e "\t${Blue} -p ${Normal}Instala gns3 desde Python-pip (Por si -g te da problemas)(Recomendado para Kali Linux)"
@@ -395,6 +395,6 @@ if [ -n "$docker" ] || [ -n "$gns3" ] || [ -n "$images" ] || [ -n "$pip" ]; then
     exito "Instalación completada\nby: Salvador Real, Redes de computadores 2019"
 
 else
-    error_fatal "Argumentos no validos\n$*\nUso $0 [-a Instalar todo] [-d instalar docker] [-g instalar gns3] [-i importar images de Salvador]"
+    error_fatal "Argumentos no validos\n$*\nUso $0 [-a Instalar todo] [-d instalar docker] [-g instalar gns3] [-p instalar gns3 desde python-pip] [-i importar images de Salvador]"
     exit -1
 fi
