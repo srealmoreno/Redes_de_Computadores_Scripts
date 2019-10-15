@@ -8,7 +8,7 @@
 # Kali linux 2019.3, 2019.1
 # Ubuntu 18
 # Linux Mint
-# Solo funciona en distribuciones basadas en Ubuntu o Debian y que utilicen apt como gestor de paquetes
+# Solo funciona en distribuciones basadas en Ubuntu o Debian amd64 y que utilicen apt como gestor de paquetes
 ####################################
 
 Green=$(tput setaf 10)
